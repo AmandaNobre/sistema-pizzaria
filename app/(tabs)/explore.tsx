@@ -12,11 +12,7 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useEffect, useState } from 'react';
-import { Dropdown } from 'react-native-element-dropdown';
-import { Item } from 'react-native-paper/lib/typescript/components/Drawer/Drawer';
-
 import React from 'react';
-type TStatus = 'Em andamento' | 'Aguardando entregador' | 'Em entrega' | 'Concluído'
 
 interface IProducts {
   id: number,
@@ -33,6 +29,7 @@ export default function TabTwoScreen() {
   }
 
   const [listProducts, setlistProducts] = useState<IProducts[]>([])
+  const [listProductsSearch, setlistProductsSearch] = useState<IProducts[]>([])
   const [itensSelected, setItensSelected] = useState<IProducts[]>([])
   const [createVisible, setCreateVisible] = useState<boolean>(false)
 
@@ -43,7 +40,8 @@ export default function TabTwoScreen() {
     const exist = listProducts.filter(f => f.id == request.id)[0]
 
     if (exist) {
-      setlistProducts(listProducts.filter(f => f.id == request.id ? { ...request, itens: itensSelected } : request))
+      removeProduct(exist.id)
+      setlistProducts(prevState => ([...prevState, { ...request }]))
     } else {
       setlistProducts(prev => ([...prev, { ...request, itens: itensSelected }]))
     }
@@ -51,12 +49,25 @@ export default function TabTwoScreen() {
     setRequests({ ...defaultRequest, id: request.id + 1 })
     setCreateVisible(!createVisible)
     setItensSelected([])
-    localStorage.setItem('products', JSON.stringify(listProducts))
   }
 
   const onChange = (value: string, name: string) => {
     setRequests({ ...request, [name]: value })
   }
+
+  const removeProduct = (id: number) => {
+    setlistProducts(listProducts.filter(f => f.id != id))
+  }
+
+  const viewEdit = (product: IProducts) => {
+    setRequests(product)
+    setCreateVisible(!createVisible)
+  }
+
+  const search = (value: string) => {
+    setlistProductsSearch(listProducts.filter(f => f.name.includes(value)))
+  }
+  useEffect(() => { setlistProductsSearch(listProducts); localStorage.setItem('products', JSON.stringify(listProducts)) }, [listProducts])
 
   return (
     <>
@@ -79,9 +90,26 @@ export default function TabTwoScreen() {
         <ThemedView>
 
         </ThemedView>
-        {listProducts.map((request, index) => (
+        <TextInput
+          style={styles.input}
+          onChangeText={(value: string) => search(value)}
+          placeholder='Pesquisar'
+        />
+        {listProductsSearch.map((request, index) => (
           <ThemedView style={styles.stepContainer} key={index}>
             <ThemedText type="subtitle">{request.name} - R${request.price}</ThemedText>
+            <ThemedView style={styles.buttonsAction}>
+              <Pressable
+                style={[styles.button, styles.buttonClose]}
+                onPress={() => removeProduct(request.id)}>
+                <ThemedText>Excluir</ThemedText>
+              </Pressable>
+              <Pressable
+                style={[styles.button, styles.buttonClose]}
+                onPress={() => viewEdit(request)}>
+                <ThemedText>Editar</ThemedText>
+              </Pressable>
+            </ThemedView>
           </ThemedView>
         ))}
 
@@ -173,6 +201,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  buttonsAction: {
+    flexDirection: 'row',
   },
   stepContainer: {
     gap: 8,
