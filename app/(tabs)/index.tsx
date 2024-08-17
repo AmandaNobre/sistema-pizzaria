@@ -21,7 +21,7 @@ type TStatus = 'Em andamento' | 'Aguardando entregador' | 'Em entrega' | 'Conclu
 interface IProducts {
   id: number,
   name: string,
-  price: number
+  price: string
 }
 
 interface IRequests {
@@ -49,9 +49,7 @@ export default function HomeScreen() {
   const [updateStatusView, setUpdateStatusView] = useState<boolean>(false)
   const [idUpdate, setIdUpdate] = useState<number>(0)
   const [listStatus] = useState<Array<TStatus>>(['Em andamento', 'Aguardando entregador', 'Em entrega', 'Concluído'])
-  const [listProducts, setListProducts] = useState<IProducts[]>([
-    { name: 'teste ', price: 10.9, id: 1 },
-    { name: 'teste 2', price: 20.9, id: 2 }])
+  const [listProducts, setListProducts] = useState<IProducts[]>([])
 
   const [createVisible, setCreateVisible] = useState<boolean>(false)
 
@@ -59,13 +57,12 @@ export default function HomeScreen() {
   const [request, setRequests] = useState<IRequests>(defaultRequest)
 
 
-  const getProducts = async () => {
+  const getProducts = () => {
     try {
-      // await AsyncStorage.setItem('products', JSON.stringify([{ name: 'teste', price: 20.0 }]))
-      // const productsStorage = await AsyncStorage.getItem('products')
-      // if (productsStorage) {
-      //   setListProducts(JSON.parse(productsStorage))
-      // }
+      const productsStorage = localStorage.getItem('products')
+      if (productsStorage) {
+        setListProducts(JSON.parse(productsStorage))
+      }
     } catch {
 
     }
@@ -101,7 +98,7 @@ export default function HomeScreen() {
 
   const calcPriceTotal = () => {
     let price = 0
-    itensSelected.forEach(item => price = price + item.price)
+    itensSelected.forEach(item => price = price + parseInt(item.price))
     setRequests({ ...request, priceTotal: price })
   }
 
@@ -122,7 +119,7 @@ export default function HomeScreen() {
         headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
         headerImage={
           <Image
-            source={require('@/assets/images/partial-react-logo.png')}
+            source={require('@/assets/images/menu.jpg')}
             style={styles.reactLogo}
           />
         }>
@@ -142,7 +139,7 @@ export default function HomeScreen() {
             <ThemedText type="subtitle">{request.id} - {request.status}</ThemedText>
             <ThemedText type="subtitle">Cliente: {request.client}</ThemedText>
             <ThemedText type="subtitle">Endereço: {request.address}</ThemedText>
-            <ThemedText type="subtitle">Preço total: {request.priceTotal}</ThemedText>
+            <ThemedText type="subtitle">Preço total: R${request.priceTotal}</ThemedText>
             {/* <Pressable
               style={[styles.button, styles.buttonClose]}
               onPress={() => editRequest(request)}>
@@ -191,14 +188,13 @@ export default function HomeScreen() {
               labelField="name"
               valueField="price"
               onChange={item => addItem(item)}
+              placeholder='Selecionar itens'
             />
-            <ThemedText>Itens selecionados</ThemedText>
 
             {itensSelected.map((itenSelected, index) =>
-              <View key={index}>
+              <View key={index} style={styles.titleContainer}>
                 <ThemedText>{itenSelected.name} - R$ {itenSelected.price}</ThemedText>
                 <Pressable
-
                   style={[styles.button, styles.buttonClose]}
                   onPress={() => removeItemSelected(itenSelected.id)}>
                   <ThemedText>exluir</ThemedText>
@@ -207,16 +203,18 @@ export default function HomeScreen() {
             )}
             <ThemedText>Total: R${request.priceTotal}</ThemedText>
 
-            <Pressable
-              style={[styles.button, styles.buttonClose]}
-              onPress={() => addListRequest()}>
-              <ThemedText>Adicionar</ThemedText>
-            </Pressable>
-            <Pressable
-              style={[styles.button, styles.buttonClose]}
-              onPress={() => setCreateVisible(!createVisible)}>
-              <ThemedText>Cancelar</ThemedText>
-            </Pressable>
+            <ThemedView style={styles.titleContainer}>
+              <Pressable
+                style={[styles.button, styles.buttonClose]}
+                onPress={() => setCreateVisible(!createVisible)}>
+                <ThemedText>Cancelar</ThemedText>
+              </Pressable>
+              <Pressable
+                style={[styles.button, styles.buttonClose]}
+                onPress={() => addListRequest()}>
+                <ThemedText>Adicionar</ThemedText>
+              </Pressable>
+            </ThemedView>
 
           </View>
         </View>
@@ -284,6 +282,8 @@ const styles = StyleSheet.create({
     borderWidth: 1
   },
   titleContainer: {
+    justifyContent: 'space-between',
+    marginTop: 10,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -293,8 +293,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   reactLogo: {
-    height: 178,
-    width: 290,
+    height: 250,
+    width: 400,
     bottom: 0,
     left: 0,
     position: 'absolute',
